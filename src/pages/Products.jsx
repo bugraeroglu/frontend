@@ -4,24 +4,22 @@ import { useNavigate } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 import SortDropdown from "../components/SortDropdown";
 
-// UI için sabit (mock) ürünler
 const MOCK = [
-  { id: 1, name: "Denim Jacket",  description: "Classic denim jacket",  price: 89.9, quantity: 8,  category_name: "Jackets",     image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format" },
-  { id: 2, name: "Wide Jeans",    description: "Relaxed-fit jeans",     price: 69.9, quantity: 0,  category_name: "Jeans",       image_url: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format" },
-  { id: 3, name: "Sweatshirt",    description: "Cozy cotton hoodie",    price: 49.9, quantity: 14, category_name: "Sweatshirts", image_url: "https://images.unsplash.com/photo-1520975940209-6c92867fd0f0?q=80&w=800&auto=format" },
-  { id: 4, name: "T-Shirt",       description: "Premium basic tee",     price: 24.9, quantity: 30, category_name: "T-Shirts",    image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format" },
-  { id: 5, name: "Chino Pants",   description: "Versatile chinos",      price: 59.9, quantity: 6,  category_name: "Pants",       image_url: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format" },
-  { id: 6, name: "Zip Hoodie",    description: "Lightweight zip hoodie",price: 54.9, quantity: 10, category_name: "Sweatshirts", image_url: "https://images.unsplash.com/photo-1520975940209-6c92867fd0f0?q=80&w=800&auto=format" },
+  { id: 1, name: "Denim Jacket", price: 89.9, quantity: 8, category_name: "Jackets", image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format" },
+  { id: 2, name: "Wide Jeans", price: 69.9, quantity: 0, category_name: "Jeans", image_url: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format" },
+  { id: 3, name: "Sweatshirt", price: 49.9, quantity: 14, category_name: "Sweatshirts", image_url: "https://images.unsplash.com/photo-1520975940209-6c92867fd0f0?q=80&w=800&auto=format" },
+  { id: 4, name: "T-Shirt", price: 24.9, quantity: 30, category_name: "T-Shirts", image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format" },
+  { id: 5, name: "Chino Pants", price: 59.9, quantity: 6, category_name: "Pants", image_url: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format" },
+  { id: 6, name: "Zip Hoodie", price: 54.9, quantity: 10, category_name: "Sweatshirts", image_url: "https://images.unsplash.com/photo-1520975940209-6c92867fd0f0?q=80&w=800&auto=format" },
 ];
 
-function Products() {
+export default function Products() {
   const navigate = useNavigate();
-
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openFilter, setOpenFilter] = useState(null);
 
-  // Sadece UI: mock veriyi yükle
   useEffect(() => {
     const t = setTimeout(() => {
       setProducts(MOCK);
@@ -31,316 +29,296 @@ function Products() {
     return () => clearTimeout(t);
   }, []);
 
-  const handleSearch = (searchTerm) => {
-    if (!searchTerm) {
-      setFilteredProducts(products);
-      return;
-    }
-    const q = searchTerm.toLowerCase();
-    const filtered = products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
-        p.category_name?.toLowerCase().includes(q)
+  const toggleSection = (section) =>
+    setOpenFilter(openFilter === section ? null : section);
+
+  const handleSearch = (term) => {
+    if (!term) return setFilteredProducts(products);
+    const q = term.toLowerCase();
+    setFilteredProducts(
+      products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.category_name?.toLowerCase().includes(q)
+      )
     );
-    setFilteredProducts(filtered);
   };
 
-  const handleSort = (sortType) => {
-    if (!sortType) {
-      setFilteredProducts(products);
-      return;
-    }
-    let sorted = [...filteredProducts];
-    switch (sortType) {
-      case "price_asc":
-        sorted.sort((a, b) => +a.price - +b.price);
-        break;
-      case "price_desc":
-        sorted.sort((a, b) => +b.price - +a.price);
-        break;
-      case "name_asc":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "name_desc":
-        sorted.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      case "newest":
-        sorted.sort(
-          (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
-        );
-        break;
-      default:
-        sorted = products;
-    }
-    setFilteredProducts(sorted);
-  };
-
-  if (loading) {
-    return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.loader}></div>
-        <p style={styles.loadingText}>Loading our premium collection...</p>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ padding: "4rem" }}>Loading...</div>;
 
   return (
     <div style={styles.page}>
-      {/* Header */}
+      {/* HEADER */}
       <div style={styles.header}>
-        <div style={styles.headerContent}>
-          <h1 style={styles.title}>PREMIUM COLLECTION</h1>
-          <p style={styles.subtitle}>
-            Discover our curated selection of fashion essentials
-          </p>
-        </div>
+        <h1 style={styles.title}>PREMIUM COLLECTION</h1>
+        <p style={styles.subtitle}>Discover our curated selection of fashion essentials</p>
       </div>
 
-      {/* Main */}
-      <div style={styles.container}>
-        {/* Search & Sort */}
-        <div style={styles.controlBar}>
-          <div style={styles.searchWrapper}>
+      <div style={styles.layout}>
+        {/* FILTER SIDEBAR */}
+        <div style={styles.sidebar}>
+          <h2 style={styles.filterTitle}>FİLTRELER</h2>
+
+          {/* Gender */}
+          <div style={styles.filterSection}>
+            <div style={styles.filterHeader} onClick={() => toggleSection("gender")}>
+              <span>Cinsiyet</span>
+              <span style={styles.plus}>+</span>
+            </div>
+            {openFilter === "gender" && (
+              <div style={styles.filterItems}>
+                <div style={styles.filterItem}>Women</div>
+                <div style={styles.filterItem}>Men</div>
+                <div style={styles.filterItem}>Unisex</div>
+              </div>
+            )}
+          </div>
+
+          {/* Category */}
+          <div style={styles.filterSection}>
+            <div style={styles.filterHeader} onClick={() => toggleSection("category")}>
+              <span>Ürün Grubu</span>
+              <span style={styles.plus}>+</span>
+            </div>
+            {openFilter === "category" && (
+              <div style={styles.filterItems}>
+                <div style={styles.filterItem}>Jackets</div>
+                <div style={styles.filterItem}>Jeans</div>
+                <div style={styles.filterItem}>Sweatshirts</div>
+                <div style={styles.filterItem}>T-Shirts</div>
+                <div style={styles.filterItem}>Pants</div>
+              </div>
+            )}
+          </div>
+
+          {/* Size */}
+          <div style={styles.filterSection}>
+            <div style={styles.filterHeader} onClick={() => toggleSection("size")}>
+              <span>Beden</span>
+              <span style={styles.plus}>+</span>
+            </div>
+            {openFilter === "size" && (
+              <div style={styles.filterItems}>
+                <div style={styles.filterItem}>XS</div>
+                <div style={styles.filterItem}>S</div>
+                <div style={styles.filterItem}>M</div>
+                <div style={styles.filterItem}>L</div>
+                <div style={styles.filterItem}>XL</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div style={styles.right}>
+          <div style={styles.topBar}>
             <SearchBar onSearch={handleSearch} />
+            <SortDropdown />
           </div>
-          <div style={styles.sortWrapper}>
-            <SortDropdown onSort={handleSort} />
-          </div>
-        </div>
 
-        {/* Count */}
-        <div style={styles.countBar}>
-          <p style={styles.count}>
-            <strong>{filteredProducts.length}</strong>{" "}
-            {filteredProducts.length === 1 ? "product" : "products"} available
-          </p>
-        </div>
+          <p style={styles.countText}>{filteredProducts.length} products found</p>
 
-        {/* Grid */}
-        {filteredProducts.length === 0 ? (
-          <div style={styles.emptyState}>
-            <div style={styles.emptyIcon}>🔍</div>
-            <h2 style={styles.emptyTitle}>No Products Found</h2>
-            <p style={styles.emptyText}>
-              We couldn't find any products matching your search.
-              <br />
-              Try adjusting your filters or browse our full collection.
-            </p>
-            <button
-              onClick={() => setFilteredProducts(products)}
-              style={styles.resetButton}
-            >
-              View All Products
-            </button>
-          </div>
-        ) : (
+          {/* PRODUCT GRID */}
           <div style={styles.grid}>
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
                 style={styles.card}
-                onClick={() => navigate(`/products/${product.id}`, { state: { p: product } })}
- // ▶️ Detay sayfasına git
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-8px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 12px 24px rgba(0,0,0,0.15)";
+                  e.currentTarget.style.boxShadow = "0 12px 25px rgba(0,0,0,0.12)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow =
-                    "0 4px 12px rgba(0,0,0,0.08)";
+                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.06)";
                 }}
-                role="button"
+                onClick={() =>
+                  navigate(`/products/${product.id}`, { state: { p: product } })
+                }
               >
-                {/* Image */}
                 <div style={styles.imageBox}>
                   {product.quantity === 0 && (
                     <div style={styles.outOfStockBadge}>OUT OF STOCK</div>
                   )}
                   <img
-                    src={
-                      product.image_url ||
-                      `https://via.placeholder.com/400x500/1a1a1a/ffffff?text=${encodeURIComponent(
-                        product.name
-                      )}`
-                    }
+                    src={product.image_url}
                     alt={product.name}
                     style={styles.image}
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.07)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                   />
-                  <div
-                    style={styles.overlay}
-                    onClick={(e) => e.stopPropagation()} // iç buton tıklaması kart navigasyonunu tetiklemesin
-                  >
-                    <button style={styles.quickViewBtn}>Quick View</button>
-                  </div>
                 </div>
 
-                {/* Info */}
                 <div style={styles.info}>
-                  <div style={styles.category}>
-                    {product.category_name || "Fashion"}
-                  </div>
-                  <h3 style={styles.productName}>{product.name}</h3>
-                  {product.description && (
-                    <p style={styles.description}>
-                      {product.description.substring(0, 60)}
-                      {product.description.length > 60 ? "..." : ""}
-                    </p>
-                  )}
-
-                  <div style={styles.priceRow}>
-                    <span style={styles.price}>
-                      ${parseFloat(product.price).toFixed(2)}
-                    </span>
-                    <span style={styles.stock}>
-                      {product.quantity > 0 ? (
-                        <span style={styles.inStock}>
-                          ● {product.quantity} in stock
-                        </span>
-                      ) : (
-                        <span style={styles.outOfStock}>● Out of stock</span>
-                      )}
-                    </span>
-                  </div>
-
-                  <button
-                    style={{
-                      ...styles.addToCartBtn,
-                      ...(product.quantity === 0 ? styles.disabledBtn : {}),
-                    }}
-                    disabled={product.quantity === 0}
-                  >
-                    {product.quantity === 0 ? "Out of Stock" : "Add to Cart"}
-                  </button>
+                  <div style={styles.category}>{product.category_name}</div>
+                  <div style={styles.name}>{product.name}</div>
+                  <div style={styles.price}>${product.price.toFixed(2)}</div>
                 </div>
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 }
 
+/* ------------------------------------ */
+/* STYLES                               */
+/* ------------------------------------ */
 const styles = {
-  page: { minHeight: "100vh", backgroundColor: "#fafafa", width: "100%" },
+  page: { background: "#fafafa", minHeight: "100vh", width: "100%" },
+
   header: {
-    backgroundColor: "#1a1a1a",
-    color: "white",
+    background: "#1a1a1a",
     padding: "3rem 1rem",
+    color: "white",
     textAlign: "center",
-    width: "100%",
-    backgroundImage: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
   },
-  headerContent: { maxWidth: "1200px", margin: "0 auto" },
+
   title: {
     fontSize: "3rem",
-    fontWeight: "800",
-    letterSpacing: "0.05em",
-    marginBottom: "0.5rem",
-    textTransform: "uppercase",
+    fontWeight: 800,
   },
-  subtitle: { fontSize: "1.1rem", color: "#b0b0b0", letterSpacing: "0.03em" },
-  container: {
-    maxWidth: "1400px",
-    margin: "0 auto",
-    padding: "3rem 2rem",
-    width: "100%",
+
+  subtitle: {
+    fontSize: "1.1rem",
+    color: "#b5b5b5",
+    marginTop: ".4rem",
   },
-  controlBar: {
+
+  layout: {
     display: "flex",
-    gap: "1rem",
-    marginBottom: "2rem",
-    alignItems: "center",
-    flexWrap: "wrap",
-    backgroundColor: "white",
-    padding: "1.5rem",
-    borderRadius: "12px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+    gap: "2rem",
+    padding: "2rem",
     width: "100%",
+    boxSizing: "border-box",
   },
-  searchWrapper: { flex: "1", minWidth: "300px" },
-  sortWrapper: { minWidth: "200px" },
-  countBar: { marginBottom: "2rem", padding: "1rem 0", borderBottom: "2px solid #e0e0e0" },
-  count: { fontSize: "0.95rem", color: "#666", letterSpacing: "0.02em" },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "2rem", width: "100%" },
-  card: {
-    backgroundColor: "white",
-    borderRadius: "12px",
-    overflow: "hidden",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-    transition: "all 0.3s ease",
+
+  /* FILTER SIDEBAR */
+  sidebar: {
+    width: "340px",
+    background: "white",
+    padding: "2.5rem",
+    borderRadius: "16px",
+    boxShadow: "0 4px 18px rgba(0,0,0,0.10)",
+    position: "sticky",
+    top: "130px",
+    height: "fit-content",
+    transform: "scale(1.05)",
+  },
+
+  filterTitle: {
+    fontSize: "2rem",
+    fontWeight: 900,
+    marginBottom: "2rem",
+  },
+
+  filterSection: {
+    marginBottom: "2.2rem",
+    borderBottom: "1px solid #ddd",
+    paddingBottom: "1.2rem",
+  },
+
+  filterHeader: {
+    display: "flex",
+    justifyContent: "space-between",
     cursor: "pointer",
+    fontWeight: "700",
+    fontSize: "1.3rem",
   },
-  imageBox: { width: "100%", height: "350px", backgroundColor: "#f5f5f5", overflow: "hidden", position: "relative" },
-  image: { width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" },
-  overlay: {
-    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.6)", display: "flex",
-    alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.3s ease",
+
+  plus: {
+    fontSize: "1.6rem",
+    fontWeight: 700,
   },
-  quickViewBtn: {
-    padding: "0.75rem 1.5rem", backgroundColor: "white", color: "#1a1a1a",
-    border: "none", borderRadius: "4px", fontSize: "0.9rem", fontWeight: "600",
-    cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em",
+
+  filterItems: {
+    marginTop: "1rem",
+    display: "flex",
+    flexDirection: "column",
+    gap: ".8rem",
   },
+
+  filterItem: {
+    fontSize: "1.2rem",
+    cursor: "pointer",
+    color: "#333",
+  },
+
+  /* RIGHT SIDE */
+  right: { flex: 1 },
+
+  topBar: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "1.5rem",
+    gap: "1rem",
+  },
+
+  countText: { marginBottom: "1rem", color: "#555" },
+
+  /* PRODUCT GRID — FIXED 4 PER ROW */
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, minmax(240px, 1fr))",
+    gap: "2rem",
+  },
+
+  /* PRODUCT CARD */
+  card: {
+    background: "white",
+    borderRadius: "14px",
+    overflow: "hidden",
+    cursor: "pointer",
+    transition: "0.25s ease",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+    border: "1px solid #eee",
+  },
+
+  imageBox: {
+    height: "260px",
+    position: "relative",
+    overflow: "hidden",
+  },
+
+  image: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    transition: "transform .3s ease",
+  },
+
   outOfStockBadge: {
-    position: "absolute", top: "1rem", right: "1rem",
-    backgroundColor: "#dc3545", color: "white", padding: "0.4rem 0.8rem",
-    fontSize: "0.7rem", fontWeight: "700", letterSpacing: "0.05em", borderRadius: "4px", zIndex: 2,
+    position: "absolute",
+    top: "1rem",
+    right: "1rem",
+    background: "#d9534f",
+    padding: ".3rem .7rem",
+    borderRadius: "4px",
+    color: "white",
+    fontSize: ".7rem",
+    fontWeight: 700,
   },
-  info: { padding: "1.5rem" },
+
+  info: { padding: "1rem" },
+
   category: {
-    fontSize: "0.75rem", color: "#999", textTransform: "uppercase",
-    letterSpacing: "0.1em", marginBottom: "0.5rem", fontWeight: "600",
+    fontSize: ".8rem",
+    color: "#777",
+    textTransform: "uppercase",
+    marginBottom: ".2rem",
   },
-  productName: { fontSize: "1.2rem", fontWeight: "600", marginBottom: "0.5rem", color: "#1a1a1a", lineHeight: "1.4" },
-  description: { fontSize: "0.85rem", color: "#666", marginBottom: "1rem", lineHeight: "1.5" },
-  priceRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" },
-  price: { fontSize: "1.5rem", fontWeight: "700", color: "#1a1a1a" },
-  stock: { fontSize: "0.8rem" },
-  inStock: { color: "#28a745", fontWeight: "600" },
-  outOfStock: { color: "#dc3545", fontWeight: "600" },
-  addToCartBtn: {
-    width: "100%", padding: "0.9rem", backgroundColor: "#1a1a1a", color: "white",
-    border: "none", borderRadius: "6px", fontSize: "0.9rem", fontWeight: "600",
-    textTransform: "uppercase", letterSpacing: "0.05em", cursor: "pointer", transition: "all 0.3s ease",
+
+  name: {
+    fontSize: "1.1rem",
+    fontWeight: 600,
+    marginBottom: ".3rem",
   },
-  disabledBtn: { backgroundColor: "#ccc", cursor: "not-allowed" },
-  loadingContainer: {
-    display: "flex", flexDirection: "column", alignItems: "center",
-    justifyContent: "center", minHeight: "100vh", backgroundColor: "#fafafa", width: "100%",
-  },
-  loader: {
-    width: "50px", height: "50px", border: "4px solid #f3f3f3",
-    borderTop: "4px solid #1a1a1a", borderRadius: "50%", animation: "spin 1s linear infinite",
-  },
-  loadingText: { marginTop: "1.5rem", fontSize: "1.1rem", color: "#666" },
-  emptyState: {
-    textAlign: "center", padding: "4rem 2rem", backgroundColor: "white",
-    borderRadius: "12px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", margin: "0 auto", maxWidth: "600px",
-  },
-  emptyIcon: { fontSize: "4rem", marginBottom: "1rem" },
-  emptyTitle: { fontSize: "1.8rem", fontWeight: "700", color: "#1a1a1a", marginBottom: "1rem" },
-  emptyText: { fontSize: "1rem", color: "#666", lineHeight: "1.6", marginBottom: "2rem" },
-  resetButton: {
-    padding: "0.9rem 2rem", backgroundColor: "#1a1a1a", color: "white",
-    border: "none", borderRadius: "6px", fontSize: "0.95rem", fontWeight: "600",
-    textTransform: "uppercase", letterSpacing: "0.05em", cursor: "pointer",
+
+  price: {
+    fontSize: "1.15rem",
+    fontWeight: 800,
   },
 };
 
-// (İstersen spin animasyonunu App.css'e taşıyabilirsin)
-const styleSheet = document.styleSheets?.[0];
-try {
-  if (styleSheet) {
-    styleSheet.insertRule(
-      `@keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }`,
-      styleSheet.cssRules.length
-    );
-  }
-} catch {}
-
-export default Products;
