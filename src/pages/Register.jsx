@@ -2,19 +2,41 @@ import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { authAPI } from '../services/api';
 
-function Login() {
+function Register() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    // Validation
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       setMessage('❌ Please fill in all fields');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setMessage('❌ Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setMessage('❌ Password must be at least 6 characters');
       return;
     }
 
@@ -22,25 +44,29 @@ function Login() {
     setMessage('');
 
     try {
-      const response = await authAPI.login({ email, password });
+      const response = await authAPI.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
       
       // Token'ı localStorage'a kaydet
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
-        setMessage('✓ Login successful! Redirecting...');
+        setMessage('✓ Registration successful! Welcome to Urban Threads! 🎉');
         
-        // 1 saniye sonra products sayfasına git
+        // 1.5 saniye sonra products sayfasına git
         setTimeout(() => {
           navigate('/products');
-        }, 1000);
+        }, 1500);
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Register error:', error);
       setMessage(
         error.response?.data?.message || 
-        '❌ Login failed. Please check your credentials.'
+        '❌ Registration failed. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -53,52 +79,82 @@ function Login() {
       <div style={styles.leftSide}>
         <div style={styles.brandSection}>
           <h1 style={styles.brandName}>URBAN THREADS</h1>
-          <p style={styles.brandTagline}>Premium Clothing for Modern Life</p>
+          <p style={styles.brandTagline}>Join Our Fashion Community</p>
           <div style={styles.brandFeatures}>
             <div style={styles.feature}>
-              <span style={styles.icon}>👕</span>
-              <p>Premium T-Shirts</p>
+              <span style={styles.icon}>🎁</span>
+              <p>Welcome Bonus</p>
             </div>
             <div style={styles.feature}>
-              <span style={styles.icon}>🧥</span>
-              <p>Cozy Sweatshirts</p>
+              <span style={styles.icon}>🚚</span>
+              <p>Free Shipping</p>
             </div>
             <div style={styles.feature}>
-              <span style={styles.icon}>👖</span>
-              <p>Stylish Jeans</p>
+              <span style={styles.icon}>⭐</span>
+              <p>Exclusive Deals</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right side - Login Form */}
+      {/* Right side - Register Form */}
       <div style={styles.rightSide}>
         <div style={styles.formContainer}>
-          <h2 style={styles.title}>Welcome Back</h2>
-          <p style={styles.subtitle}>Sign in to continue shopping</p>
+          <h2 style={styles.title}>Create Account</h2>
+          <p style={styles.subtitle}>Start your style journey today</p>
           
-          <form onSubmit={handleLogin} style={styles.form} noValidate>
-            {/* EMAIL INPUT - EKLENDİ */}
+          <form onSubmit={handleRegister} style={styles.form} noValidate>
+            {/* NAME INPUT */}
+            <div style={styles.formGroup}>
+              <label style={styles.label}>FULL NAME</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="John Doe"
+                style={styles.input}
+                required
+              />
+            </div>
+
+            {/* EMAIL INPUT */}
             <div style={styles.formGroup}>
               <label style={styles.label}>EMAIL</label>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="your.email@example.com"
                 style={styles.input}
                 required
               />
             </div>
 
-            {/* PASSWORD INPUT - EKLENDİ */}
+            {/* PASSWORD INPUT */}
             <div style={styles.formGroup}>
               <label style={styles.label}>PASSWORD</label>
               <input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Minimum 6 characters"
+                style={styles.input}
+                required
+              />
+            </div>
+
+            {/* CONFIRM PASSWORD INPUT */}
+            <div style={styles.formGroup}>
+              <label style={styles.label}>CONFIRM PASSWORD</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Re-enter your password"
                 style={styles.input}
                 required
               />
@@ -113,7 +169,7 @@ function Login() {
                 cursor: loading ? 'not-allowed' : 'pointer'
               }}
             >
-              {loading ? 'SIGNING IN...' : 'SIGN IN'}
+              {loading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
             </button>
           </form>
 
@@ -130,20 +186,18 @@ function Login() {
 
           <div style={styles.footer}>
             <p style={styles.footerText}>
-              Don't have an account?{' '}
-              <a href="/register" style={styles.link}>Sign up</a>
+              Already have an account?{' '}
+              <a href="/login" style={styles.link}>Sign in</a>
             </p>
-            <a href="/forgot-password" style={styles.forgotLink}>Forgot password?</a>
           </div>
 
-          <div style={styles.divider}>
-            <span style={styles.dividerText}>New to Urban Threads?</span>
-          </div>
-
-          <div style={styles.benefits}>
-            <p style={styles.benefitItem}>✓ Exclusive member discounts</p>
-            <p style={styles.benefitItem}>✓ Early access to new collections</p>
-            <p style={styles.benefitItem}>✓ Free shipping on orders over $50</p>
+          <div style={styles.terms}>
+            <p style={styles.termsText}>
+              By creating an account, you agree to our{' '}
+              <a href="/terms" style={styles.termsLink}>Terms of Service</a>
+              {' '}and{' '}
+              <a href="/privacy" style={styles.termsLink}>Privacy Policy</a>
+            </p>
           </div>
         </div>
       </div>
@@ -232,7 +286,7 @@ const styles = {
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem',
+    gap: '1.2rem',
   },
   formGroup: {
     display: 'flex',
@@ -275,6 +329,7 @@ const styles = {
     textAlign: 'center',
     fontSize: '0.9rem',
     fontWeight: '500',
+    animation: 'slideDown 0.3s ease-out',
   },
   footer: {
     marginTop: '2rem',
@@ -283,7 +338,6 @@ const styles = {
   footerText: {
     fontSize: '0.9rem',
     color: '#666',
-    marginBottom: '0.5rem',
   },
   link: {
     color: '#1a1a1a',
@@ -291,35 +345,19 @@ const styles = {
     fontWeight: '600',
     borderBottom: '1px solid #1a1a1a',
   },
-  forgotLink: {
-    fontSize: '0.85rem',
-    color: '#999',
-    textDecoration: 'none',
-    display: 'inline-block',
-    marginTop: '0.5rem',
-  },
-  divider: {
-    position: 'relative',
-    margin: '2rem 0',
+  terms: {
+    marginTop: '1.5rem',
     textAlign: 'center',
   },
-  dividerText: {
-    backgroundColor: 'white',
-    padding: '0 1rem',
+  termsText: {
+    fontSize: '0.75rem',
     color: '#999',
-    fontSize: '0.85rem',
-    position: 'relative',
-    zIndex: 1,
+    lineHeight: '1.5',
   },
-  benefits: {
-    marginTop: '1rem',
-  },
-  benefitItem: {
-    fontSize: '0.85rem',
+  termsLink: {
     color: '#666',
-    marginBottom: '0.5rem',
-    paddingLeft: '0.5rem',
+    textDecoration: 'underline',
   },
 };
 
-export default Login;
+export default Register;

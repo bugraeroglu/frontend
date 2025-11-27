@@ -3,33 +3,32 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "r
 
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import OrderHistory from "./pages/OrderHistory";
 import OrderDetail from "./pages/OrderDetail";
 import Cart from "./pages/Cart";
 
-
 function AppContent() {
   const location = useLocation();
 
   return (
     <>
-      {/* Login sayfasında navbar görünmesin */}
-      {location.pathname !== "/login" && <Navbar />}
+      {location.pathname !== "/login" && location.pathname !== "/register" && <Navbar />}
 
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />  {/* ✅ EKLENDİ */}
         <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/orders" element={<OrderHistory />} />
         <Route path="/orders/:id" element={<OrderDetail />} />
+        <Route path="/cart" element={<Cart />} />
         
         {/* 404 */}
         <Route path="*" element={<Navigate to="/login" replace />} />
-        <Route path="/cart" element={<Cart />} />
-
       </Routes>
     </>
   );
