@@ -39,3 +39,14 @@ export const productsAPI = {
 };
 
 export default api;
+
+// Cart API
+export const cartAPI = {
+  getCart: () => api.get('/cart'),
+  addToCart: (productId, quantity) => 
+    api.post('/cart/add', { productId, quantity }),
+  updateQuantity: (itemId, quantity) => 
+    api.put(`/cart/items/${itemId}`, { quantity }),
+  removeItem: (itemId) => 
+    api.delete(`/cart/items/${itemId}`),
+};
