@@ -5,13 +5,86 @@ import SearchBar from "../components/SearchBar";
 import SortDropdown from "../components/SortDropdown";
 
 const MOCK = [
-  { id: 1, name: "Denim Jacket", price: 89.9, quantity: 8, category_name: "Jackets", image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format" },
-  { id: 2, name: "Wide Jeans", price: 69.9, quantity: 0, category_name: "Jeans", image_url: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format" },
-  { id: 3, name: "Sweatshirt", price: 49.9, quantity: 14, category_name: "Sweatshirts", image_url: "https://images.unsplash.com/photo-1520975940209-6c92867fd0f0?q=80&w=800&auto=format" },
-  { id: 4, name: "T-Shirt", price: 24.9, quantity: 30, category_name: "T-Shirts", image_url: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format" },
-  { id: 5, name: "Chino Pants", price: 59.9, quantity: 6, category_name: "Pants", image_url: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format" },
-  { id: 6, name: "Zip Hoodie", price: 54.9, quantity: 10, category_name: "Sweatshirts", image_url: "https://images.unsplash.com/photo-1520975940209-6c92867fd0f0?q=80&w=800&auto=format" },
+  {
+    id: 1,
+    name: "Denim Jacket",
+    price: 89.9,
+    quantity: 8,
+    category_name: "Jackets",
+    image_url:
+      "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format",
+  },
+  {
+    id: 2,
+    name: "Wide Jeans",
+    price: 69.9,
+    quantity: 0,
+    category_name: "Jeans",
+    image_url:
+      "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format",
+  },
+  {
+    id: 3,
+    name: "Sweatshirt",
+    price: 49.9,
+    quantity: 14,
+    category_name: "Sweatshirts",
+    image_url:
+      "https://images.unsplash.com/photo-1520975940209-6c92867fd0f0?q=80&w=800&auto=format",
+  },
+  {
+    id: 4,
+    name: "T-Shirt",
+    price: 24.9,
+    quantity: 30,
+    category_name: "T-Shirts",
+    image_url:
+      "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format",
+  },
+  {
+    id: 5,
+    name: "Chino Pants",
+    price: 59.9,
+    quantity: 6,
+    category_name: "Pants",
+    image_url:
+      "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=800&auto=format",
+  },
+  {
+    id: 6,
+    name: "Zip Hoodie",
+    price: 54.9,
+    quantity: 10,
+    category_name: "Sweatshirts",
+    image_url:
+      "https://images.unsplash.com/photo-1520975940209-6c92867fd0f0?q=80&w=800&auto=format",
+  },
 ];
+
+// ✅ Yardımcı: Listeyi sort değerine göre sıralar (UI-only)
+function applySort(items, sortKey) {
+  const list = [...items];
+  switch (sortKey) {
+    case "price_asc":
+      return list.sort((a, b) => a.price - b.price);
+    case "price_desc":
+      return list.sort((a, b) => b.price - a.price);
+    case "name_asc":
+      return list.sort((a, b) => a.name.localeCompare(b.name));
+    case "name_desc":
+      return list.sort((a, b) => b.name.localeCompare(a.name));
+    case "popular":
+      // Backend olmadığı için popularity'i quantity üzerinden simüle ediyoruz
+      return list.sort(
+        (a, b) => (b.quantity ?? 0) - (a.quantity ?? 0)
+      );
+    case "newest":
+      // MOCK veride id'si büyük olanı "daha yeni" sayıyoruz
+      return list.sort((a, b) => b.id - a.id);
+    default:
+      return list;
+  }
+}
 
 export default function Products() {
   const navigate = useNavigate();
@@ -19,11 +92,13 @@ export default function Products() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openFilter, setOpenFilter] = useState(null);
+  const [sort, setSort] = useState("newest"); // ✅ yeni sort state
 
   useEffect(() => {
     const t = setTimeout(() => {
-      setProducts(MOCK);
-      setFilteredProducts(MOCK);
+      const base = applySort(MOCK, "newest"); // ✅ Default: newest
+      setProducts(base);
+      setFilteredProducts(base);
       setLoading(false);
     }, 150);
     return () => clearTimeout(t);
@@ -33,15 +108,26 @@ export default function Products() {
     setOpenFilter(openFilter === section ? null : section);
 
   const handleSearch = (term) => {
-    if (!term) return setFilteredProducts(products);
-    const q = term.toLowerCase();
-    setFilteredProducts(
-      products.filter(
+    let base = products;
+
+    if (term) {
+      const q = term.toLowerCase();
+      base = products.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
           p.category_name?.toLowerCase().includes(q)
-      )
-    );
+      );
+    }
+
+    // ✅ Arama sonuçlarına mevcut sort'ı uygula
+    setFilteredProducts(applySort(base, sort));
+  };
+
+  // ✅ Sort değişince listeyi güncelle
+  const handleSortChange = (sortKey) => {
+    const key = sortKey || "newest";
+    setSort(key);
+    setFilteredProducts((prev) => applySort(prev, key));
   };
 
   if (loading) return <div style={{ padding: "4rem" }}>Loading...</div>;
@@ -51,7 +137,9 @@ export default function Products() {
       {/* HEADER */}
       <div style={styles.header}>
         <h1 style={styles.title}>PREMIUM COLLECTION</h1>
-        <p style={styles.subtitle}>Discover our curated selection of fashion essentials</p>
+        <p style={styles.subtitle}>
+          Discover our curated selection of fashion essentials
+        </p>
       </div>
 
       <div style={styles.layout}>
@@ -61,7 +149,10 @@ export default function Products() {
 
           {/* Gender */}
           <div style={styles.filterSection}>
-            <div style={styles.filterHeader} onClick={() => toggleSection("gender")}>
+            <div
+              style={styles.filterHeader}
+              onClick={() => toggleSection("gender")}
+            >
               <span>Cinsiyet</span>
               <span style={styles.plus}>+</span>
             </div>
@@ -76,7 +167,10 @@ export default function Products() {
 
           {/* Category */}
           <div style={styles.filterSection}>
-            <div style={styles.filterHeader} onClick={() => toggleSection("category")}>
+            <div
+              style={styles.filterHeader}
+              onClick={() => toggleSection("category")}
+            >
               <span>Ürün Grubu</span>
               <span style={styles.plus}>+</span>
             </div>
@@ -93,7 +187,10 @@ export default function Products() {
 
           {/* Size */}
           <div style={styles.filterSection}>
-            <div style={styles.filterHeader} onClick={() => toggleSection("size")}>
+            <div
+              style={styles.filterHeader}
+              onClick={() => toggleSection("size")}
+            >
               <span>Beden</span>
               <span style={styles.plus}>+</span>
             </div>
@@ -113,10 +210,13 @@ export default function Products() {
         <div style={styles.right}>
           <div style={styles.topBar}>
             <SearchBar onSearch={handleSearch} />
-            <SortDropdown />
+            {/* ✅ SortDropdown artık gerçekten sort ediyor */}
+            <SortDropdown onSort={handleSortChange} />
           </div>
 
-          <p style={styles.countText}>{filteredProducts.length} products found</p>
+          <p style={styles.countText}>
+            {filteredProducts.length} products found
+          </p>
 
           {/* PRODUCT GRID */}
           <div style={styles.grid}>
@@ -126,14 +226,18 @@ export default function Products() {
                 style={styles.card}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-8px)";
-                  e.currentTarget.style.boxShadow = "0 12px 25px rgba(0,0,0,0.12)";
+                  e.currentTarget.style.boxShadow =
+                    "0 12px 25px rgba(0,0,0,0.12)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.06)";
+                  e.currentTarget.style.boxShadow =
+                    "0 2px 6px rgba(0,0,0,0.06)";
                 }}
                 onClick={() =>
-                  navigate(`/products/${product.id}`, { state: { p: product } })
+                  navigate(`/products/${product.id}`, {
+                    state: { p: product },
+                  })
                 }
               >
                 <div style={styles.imageBox}>
@@ -144,15 +248,21 @@ export default function Products() {
                     src={product.image_url}
                     alt={product.name}
                     style={styles.image}
-                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.07)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.transform = "scale(1.07)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.transform = "scale(1)")
+                    }
                   />
                 </div>
 
                 <div style={styles.info}>
                   <div style={styles.category}>{product.category_name}</div>
                   <div style={styles.name}>{product.name}</div>
-                  <div style={styles.price}>${product.price.toFixed(2)}</div>
+                  <div style={styles.price}>
+                    ${product.price.toFixed(2)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -321,4 +431,3 @@ const styles = {
     fontWeight: 800,
   },
 };
-
