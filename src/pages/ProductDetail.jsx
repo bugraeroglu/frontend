@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { productsAPI, cartAPI } from "../services/api";
 
+import ProductReviews from "../components/ProductReviews";
+
+
 export default function ProductDetail() {
   const { id } = useParams();
   const { state } = useLocation();
@@ -257,6 +260,22 @@ export default function ProductDetail() {
           <p style={S.muted}>{product.sku || `FF-${product.id}`}</p>
         </div>
       </div>
+
+            {/* COMMENTS & RATINGS (UI only) */}
+            <ProductReviews product={product} />
+
+{/* ACCORDION */}
+<Accordion
+  items={[
+    { title: "SIZE & FIT", content: "True to size. Model is 185 cm and wears M." },
+    {
+      title: "DELIVERY, RETURNS & SELLER",
+      content: "Free returns within 14 days. Ships with trusted couriers.",
+    },
+  ]}
+/>
+
+
 
       {/* ACCORDION */}
       <Accordion
